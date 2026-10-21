@@ -1,0 +1,38 @@
+name: ifclite-windmill
+services:
+  assets:
+    build:
+      context: ../..
+      dockerfile: integrations/windmill/Dockerfile
+    image: ifclite-windmill:local
+    restart: unless-stopped
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    environment:
+      WINDMILL_INTERNAL_URL: http://windmill_server:8000
+      WINDMILL_WORKSPACE: ${WINDMILL_WORKSPACE:-main}
+      IFCLITE_FILE_ROOTS: '{"uploads":"/models/uploads","output":"/models/output","examples":"/models/examples"}'
+    volumes:
+      - uploads:/models/uploads:ro
+      - output:/models/output:ro
+      - ../../tests/models:/models/examples:ro
+    networks: [windmill]
+    labels:
+      traefik.enable: 'true'
+      traefik.http.services.ifclite-assets.loadbalancer.server.port: '8091'
+      traefik.http.routers.ifclite-assets.rule: Host(`${WINDMILL_DOMAIN:?Set WINDMILL_DOMAIN}`) && PathPrefix(`/ifc-lite/`)
+      traefik.http.routers.ifclite-assets.entrypoints: websecure
+      traefik.http.routers.ifclite-assets.tls.certresolver: letsencrypt
+      traefik.http.routers.ifclite-assets.service: ifclite-assets
+networks:
+  windmill:
+    external: true
+    name: ${WINDMILL_DOCKER_NETWORK:-windmill_default}
+volumes:
+  uploads:
+    external: true
+    name: ${IFC_UPLOADS_VOLUME:-ifcpipeline-wm_uploads}
+  output:
+    external: true
+    name: ${IFC_OUTPUT_VOLUME:-ifcpipeline-wm_output}

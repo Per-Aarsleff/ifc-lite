@@ -16,5 +16,6 @@
 // thin-LTO removes the OOM. Safe to delete once a clean build is cached.
 
 import { mountViewer } from './bootstrap';
+import { windmillOptions } from './windmill/entry';
 
-mountViewer(document.getElementById('root')!);
+mountViewer(document.getElementById('root')!, windmillOptions());

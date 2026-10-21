@@ -47,8 +47,13 @@
   ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", "pkg/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        "pkg/**"
+      ],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**",
@@ -69,14 +74,15 @@
         "VITE_POSTHOG_KEY",
         "VITE_POSTHOG_HOST",
         "VITE_SOURCEMAP",
-        "VERCEL_GIT_COMMIT_SHA",
-        "VERCEL_DEPLOYMENT_ID",
-        "VERCEL_SKEW_PROTECTION_ENABLED",
-        "GITHUB_SHA"
+        "GITHUB_SHA",
+        "IFCLITE_BUILD_SHA",
+        "IFCLITE_ASSET_BASE"
       ]
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "outputs": []
     },
     "dev": {
@@ -84,11 +90,15 @@
       "persistent": true
     },
     "test": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": false
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": false
     }
   }

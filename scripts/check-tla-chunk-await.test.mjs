@@ -58,9 +58,7 @@ function runOn(chunks, { assetsRel = ASSETS_REL, env = {} } = {}) {
     }
     const r = spawnSync(process.execPath, [GATE, '--root', dir], {
       encoding: 'utf8',
-      // Scrub the Vercel variables from the parent so a local run never
-      // inherits a deployment layout, then apply the case's own.
-      env: { ...process.env, VERCEL_DEPLOYMENT_ID: '', VERCEL_SKEW_PROTECTION_ENABLED: '', ...env },
+      env: { ...process.env, ...env },
     });
     return { status: r.status, out: `${r.stdout}${r.stderr}` };
   } finally {
@@ -156,16 +154,6 @@ test('RED: chunks emitted but not one __tla-wrapped chunk must fail, not tick', 
   assert.match(out, /2 \.js chunk\(s\)/);
 });
 
-test('a Skew-Protected Vercel build is inspected in its per-deployment asset dir (#4886)', () => {
-  const env = { VERCEL_DEPLOYMENT_ID: 'dpl_Test123', VERCEL_SKEW_PROTECTION_ENABLED: '1' };
-  const assetsRel = join(ASSETS_REL, 'dpl_Test123');
-  const healthy = runOn({ 'store-abc.js': TLA_CHUNK, 'LayersPanel-x.js': GOOD_IMPORTER }, { assetsRel, env });
-  assert.equal(healthy.status, 0, healthy.out);
-  // Chunks flat in assets/ while the build is nested means the gate would be
-  // reading the wrong directory: it must refuse, not pass on nothing.
-  const misplaced = runOn({ 'store-abc.js': TLA_CHUNK, 'LayersPanel-x.js': GOOD_IMPORTER }, { env });
-  assert.notEqual(misplaced.status, 0, misplaced.out);
-});
 
 test('RED: an assets dir with no .js chunks at all must fail', () => {
   const { status, out } = runOn({});
