@@ -7,9 +7,6 @@ import {
   loadDaluxRelayConfig,
 } from '../server/sources/dalux-relay.js';
 
-export const runtime = 'edge';
-export const config = { runtime: 'edge' };
-
 const handler = createDaluxRelayHandler(loadDaluxRelayConfig(process.env), {
   fetchImpl: fetch,
 });

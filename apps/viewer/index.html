@@ -16,20 +16,7 @@
   </script>
 
   <script>
-    // Boot self-heal for a retired Vercel skew pin (issues #1457 and #4649).
-    //
-    // BACKGROUND. The site can run behind Vercel Skew Protection, which routes
-    // same-origin requests to the deployment named by a `__vdpl` cookie. The old
-    // implementation set a SameSite=Strict cookie in this inline script. On a
-    // cross-site navigation the current HTML could arrive without that cookie,
-    // while the preload scanner raced ahead and fetched its assets with the old
-    // pin. Every /assets/* request then went to the wrong deployment and 404'd.
-    //
-    // Root middleware now sets a SameSite=Lax pin in the DOCUMENT RESPONSE
-    // HEADERS. Headers are processed before the response body and preload
-    // scanner, so the document and all content-hashed assets agree. Keep this
-    // INLINE self-heal as a bounded backstop: if retention has removed a pinned
-    // deployment, expire the readable pin before reloading onto current.
+    // Bounded recovery if an application update retires an entry chunk.
     (function () {
       var KEY = 'ifc-lite:boot-reload';
       var COUNT_COOKIE = 'ifc-lite-boot-reload';
@@ -45,31 +32,6 @@
       var mountedOnce = false;
 
       function warn(msg) { if (typeof console !== 'undefined') console.warn('[boot-self-heal] ' + msg); }
-
-      // Registrable-ish parent domain (last two labels) so we can also clear a
-      // pin that an earlier build set with a Domain attribute — a host-only
-      // deletion would not remove it. Best-effort; '' on a single-label host.
-      function parentDomain() {
-        var parts = (location.hostname || '').split('.');
-        return parts.length >= 2 ? parts.slice(-2).join('.') : '';
-      }
-
-      // Expire a Vercel skew pin in every scope it might have been set. This is
-      // called only by the bounded failure recovery: clearing a healthy pin on
-      // every load would disable Skew Protection before lazy assets can use it.
-      function clearPin() {
-        try {
-          document.cookie = '__vdpl=; path=/; Max-Age=0; SameSite=Lax';
-          document.cookie = '__vdpl=; path=/; Max-Age=0; SameSite=Strict; Secure';
-          // This build's asset-scoped pin (#4886), which outranks the one above
-          // for its own assets: /assets/<deploymentId>/, read off the entry script.
-          var entry = document.querySelector('script[type="module"][src*="/assets/dpl_"]');
-          var scoped = entry && /\/assets\/dpl_[A-Za-z0-9]+\//.exec(entry.getAttribute('src') || '');
-          if (scoped) document.cookie = '__vdpl=; path=' + scoped[0] + '; Max-Age=0; SameSite=Lax; Secure';
-          var pd = parentDomain();
-          if (pd) document.cookie = '__vdpl=; path=/; domain=.' + pd + '; Max-Age=0; SameSite=Lax; Secure';
-        } catch (e) { warn('could not clear __vdpl pin: ' + e); }
-      }
 
       // Reload-attempt counter. Prefer sessionStorage (auto-clears on tab close);
       // fall back to a short-lived cookie when storage is blocked (private mode /
@@ -118,10 +80,6 @@
         if (mountedOnce || observeMount()) return;
         var n = attempts();
         if (n >= MAX) return;                       // avoid reload loops on a real outage
-        // A stale __vdpl pin is the most likely cause of an entry/asset 404, so
-        // drop it BEFORE every reload (not just the second) — the reload then
-        // falls back to the current live deployment and its matching assets.
-        clearPin();
         // Record the attempt BEFORE reloading and confirm it stuck; if it didn't,
         // bail rather than risk reloading forever.
         if (!recordAttempts(n + 1)) { warn('retry count did not persist; skipping auto-reload to avoid a loop (' + reason + ')'); return; }
