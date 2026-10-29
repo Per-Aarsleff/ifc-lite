@@ -1,0 +1,9 @@
+**
+!integrations
+!integrations/windmill
+!integrations/windmill/*.mjs
+!integrations/windmill/profiles.json
+!apps
+!apps/viewer
+!apps/viewer/dist
+!apps/viewer/dist/**

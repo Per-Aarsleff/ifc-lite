@@ -14,9 +14,6 @@ const chatConfig = loadChatConfig(process.env);
 const databaseUrl = requireEnv('DATABASE_URL');
 const usageStore = new SqlChatUsageStore(neon(databaseUrl), chatConfig);
 
-export const runtime = 'edge';
-export const config = { runtime: 'edge' };
-
 const handler = createChatHandler(chatConfig, {
   fetchImpl: fetch,
   usageStore,

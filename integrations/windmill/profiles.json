@@ -1,0 +1,4 @@
+[
+  { "id": "discovery", "path": "f/ifclite/discovery", "summary": "IFC Discovery" },
+  { "id": "clash-detection", "path": "f/ifclite/clash_detection", "summary": "IFC Clash Detection" }
+]

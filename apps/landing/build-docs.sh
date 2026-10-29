@@ -3,18 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
-# Vercel build for the ifclite.dev project (root directory: apps/landing).
-# Assembles the deployed site into dist/:
-#   dist/        <- the static landing page (this directory, as-is)
-#   dist/docs/   <- the mkdocs site built from ../../mkdocs.yml
-#
-# The project has "include source files outside of the root directory"
-# enabled, so ../../docs and ../../mkdocs.yml are present in the build
-# container. Python 3 is available in the Vercel build image; the docs
-# requirements are pure-Python (mkdocs-material and two plugins).
-#
-# Locally: bash apps/landing/build-docs.sh (from anywhere) then serve
-# apps/landing/dist.
+# Build the static landing page and documentation with a local Python venv.
 
 set -euo pipefail
 
@@ -25,20 +14,18 @@ DIST="$HERE/dist"
 rm -rf "$DIST"
 mkdir -p "$DIST"
 
-# 1. Static landing files. Exclude the build outputs and this script;
-#    vercel.json is read from the source dir by Vercel, not served.
+# 1. Copy static landing files, excluding build tooling.
 (
   cd "$HERE"
   for f in *; do
     case "$f" in
-      dist | build-docs.sh | node_modules | .vercel) continue ;;
+      dist | build-docs.sh | node_modules | .venv-docs) continue ;;
     esac
     cp -R "$f" "$DIST/$f"
   done
 )
 
-# 2. Docs. The Vercel build image's system Python is externally managed
-#    (PEP 668), so installs go into a throwaway venv.
+# 2. Build documentation in an isolated Python environment.
 VENV="$HERE/.venv-docs"
 python3 -m venv "$VENV"
 "$VENV/bin/pip" install --quiet --disable-pip-version-check -r "$ROOT/requirements-docs.txt"

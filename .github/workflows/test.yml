@@ -116,7 +116,6 @@ jobs:
     # repos for *larger* runners). Light jobs — path filter, lint, the gate —
     # don't need a larger runner; Rust/WASM compilation also stays on the
     # standard runner so routine CI remains within the Depot Developer tier.
-    # See scripts/README-vercel-cost.md for the full runner-cost rationale.
     runs-on: ${{ (vars.SELF_HOSTED_CI == 'true' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft == false && !contains(github.event.pull_request.labels.*.name, 'ci:hosted')))) && fromJSON('["self-hosted","linux","x64","ifclite"]') || 'ubuntu-latest' }}
     # A path filter over one checkout. Anything past a minute is a hung API call,
     # not work. Capped because the default is SIX HOURS and a job killed by its own
@@ -392,7 +391,6 @@ jobs:
               # `.oxlintrc.json` above. It goes here rather than under `rust:`
               # because the gate is a Node step and `rust:` would additionally
               # spin the WASM compile lane for a one-line JSON edit
-              # (scripts/README-vercel-cost.md).
               - 'rust-major-offset.json'
               - 'tests/models/manifest.json'
               - '.github/workflows/test.yml'
@@ -1857,8 +1855,8 @@ jobs:
       # The viewer's own `build` script runs scripts/check-tla-chunk-await.mjs
       # over the emitted dist/assets, so this step enforces the __tla guard
       # too. It lives in the build script rather than here because the #2243
-      # white screen reached users through Vercel, and a CI-only gate does not
-      # run there: vercel-build.sh -> turbo build --filter -> this same script.
+      # white screen reached users in production, and a CI-only gate does not
+      # run there: the viewer build invokes this same script.
       - name: Build viewer app (also runs the __tla chunk-await guard)
         run: pnpm turbo build --filter=@ifc-lite/viewer
       # No browser download: the CI project uses channel:'chrome' (the

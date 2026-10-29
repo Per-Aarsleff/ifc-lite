@@ -16,7 +16,6 @@ import { oauthCallbackRoutes } from './vite-plugins/oauth-callback';
 // Same allowlist the production relay uses, so dev and prod cannot disagree
 // about which Dalux node a request reaches (#2792).
 import { daluxRelayRoute } from './vite-plugins/dalux-relay';
-import { deploymentAssetsDir } from '../../scripts/lib/deployment-assets-dir.mjs';
 
 // --- Build-time changelog parser ---
 interface ReleaseHighlight {
@@ -209,11 +208,11 @@ const rootPkg = JSON.parse(
 );
 const appVersion = viewerPkg.version || rootPkg.version;
 // Git commit the bundle was built from, for attributing field perf/regressions
-// to a specific deploy. Vercel sets VERCEL_GIT_COMMIT_SHA, GitHub Actions sets
-// GITHUB_SHA; falls back to 'dev' for local builds.
-const buildSha = (process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || 'dev').slice(0, 12);
+// to a specific deploy. CI or the Windmill build supplies the revision.
+const buildSha = (process.env.IFCLITE_BUILD_SHA || process.env.GITHUB_SHA || 'dev').slice(0, 12);
 
 export default defineConfig({
+  base: process.env.IFCLITE_ASSET_BASE || '/',
   plugins: [
     react(),
     Icons({
@@ -250,7 +249,7 @@ export default defineConfig({
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
     __RELEASE_HISTORY__: JSON.stringify(parseChangelogs()),
     __PACKAGE_VERSIONS__: JSON.stringify(collectPackageVersions()),
-    CESIUM_BASE_URL: JSON.stringify('/cesium'),
+    CESIUM_BASE_URL: JSON.stringify(`${process.env.IFCLITE_ASSET_BASE || '/'}cesium`),
   },
   resolve: {
     alias: {
@@ -310,18 +309,10 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    assetsDir: deploymentAssetsDir(process.env.VERCEL_DEPLOYMENT_ID, process.env.VERCEL_SKEW_PROTECTION_ENABLED), // #4886
+    assetsDir: 'assets',
+    manifest: true,
     chunkSizeWarningLimit: 6000,
-    // Opt-in production source maps for PostHog error tracking: without them every
-    // captured stack frame is minified soup ("Could not find sourcemap for source url").
-    //
-    // Gated on VITE_SOURCEMAP rather than always-on for two reasons: rollup's
-    // map generation for this bundle costs real build time and memory, and the
-    // Vercel builder is already tight enough that the WASM link has OOM'd it
-    // before. scripts/vercel-build.sh turns this on only when a PostHog CLI key
-    // is present - i.e. only when the maps will actually be uploaded and then
-    // deleted from the output. Declared in turbo.json's build `env` so toggling
-    // it busts the task cache instead of restoring a map-less dist.
+    // Opt-in source maps for the deployment operator.
     sourcemap: process.env.VITE_SOURCEMAP === '1',
     rollupOptions: {
       // @ifc-lite/geometry's NativeBridge does a dynamic `import('@tauri-apps/api/event')`

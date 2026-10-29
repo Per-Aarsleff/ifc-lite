@@ -78,7 +78,6 @@
  */
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
-import { deploymentAssetsDir } from './lib/deployment-assets-dir.mjs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -91,13 +90,7 @@ const ROOT =
   rootArgIndex !== -1 && process.argv[rootArgIndex + 1]
     ? process.argv[rootArgIndex + 1]
     : join(dirname(fileURLToPath(import.meta.url)), '..');
-// The chunk directory is wherever THIS build wrote it: `assets/<deploymentId>`
-// on a Skew-Protected Vercel deployment (#4886), `assets` otherwise. Same env,
-// same rule as vite.config.ts, so the gate cannot inspect a stale or empty dir.
-const ASSETS_DIR = join(
-  ROOT, 'apps', 'viewer', 'dist',
-  deploymentAssetsDir(process.env.VERCEL_DEPLOYMENT_ID, process.env.VERCEL_SKEW_PROTECTION_ENABLED),
-);
+const ASSETS_DIR = join(ROOT, 'apps', 'viewer', 'dist', 'assets');
 
 if (!existsSync(ASSETS_DIR)) {
   console.error(

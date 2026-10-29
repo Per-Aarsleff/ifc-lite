@@ -684,13 +684,8 @@ export class IfcAPI {
      * when a filter matched nothing (#4659, the STEP twin of #4483/#4484). When
      * set, the forward `#`-reference closure is added so the subset never dangles
      * a reference.
-     * `mutations_json` carries `MutablePropertyView` edits; empty ⇒ none. It is
-     * either the mutation log `MutablePropertyView.exportMutations()` returns
-     * (an object with a `mutations` array, optionally `newEntities` and
-     * `georefMutations`), written with byte parity to the TypeScript
-     * `StepExporter` (#5941), or the older pre-serialized
-     * `{ attributeUpdates, propertyMutations }` shape. A log does not combine
-     * with `included`. See `export_step_json` for both shapes.
+     * `mutations_json` carries `MutablePropertyView` edits (attribute updates +
+     * property-set synthesis); empty ⇒ none. See `export_step_json` for the shape.
      * A non-empty but malformed `mutations_json` throws rather than silently
      * exporting the model with none of the caller's edits applied — mirrors
      * `exportGlb`'s and `exportMerged`'s fail-closed contract on this same API.
@@ -725,15 +720,6 @@ export class IfcAPI {
      * ```
      */
     extractProfiles(content: string, model_index: number): ProfileCollection;
-    /**
-     * Return authored swept-disk occurrences, including exact line/arc
-     * directrices and derived measurements, in absolute IFC Z-up metres.
-     * `ids` contains product STEP IDs; omit it for all products or pass an
-     * empty `Uint32Array` for none. Unsupported records keep their status and
-     * a null `directrix_metrics`; malformed representation walks report a
-     * diagnostic and omit that product atomically.
-     */
-    extractSweptDiskDescriptions(content: Uint8Array, ids?: Uint32Array | null): any;
     /**
      * Sharded pre-pass: merge the shard-resolved styled-item columns with the
      * SUPPORT spans (extracted host-side from the shard classes) and run the
@@ -2397,7 +2383,6 @@ export interface InitOutput {
     readonly ifcapi_exportStep: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => void;
     readonly ifcapi_exportUsd: (a: number, b: number, c: number, d: number) => void;
     readonly ifcapi_extractProfiles: (a: number, b: number, c: number, d: number) => number;
-    readonly ifcapi_extractSweptDiskDescriptions: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly ifcapi_finalizePrepassStyles: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number, x: number, y: number) => void;
     readonly ifcapi_finalizePrepassStylesFromSource: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number, r: number, s: number, t: number, u: number, v: number, w: number) => void;
     readonly ifcapi_getMemory: (a: number) => number;

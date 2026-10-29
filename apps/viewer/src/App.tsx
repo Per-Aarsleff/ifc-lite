@@ -22,7 +22,6 @@ import { ChunkErrorBoundary } from './components/ChunkErrorBoundary';
 import { StaleDeploymentNotice } from './components/StaleDeploymentNotice';
 import { LensRuntimeHost } from './components/viewer/LensRuntimeHost';
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Analytics } from '@vercel/analytics/react';
 
 // The /mcp marketing surface pulls in three.js (HeroScene / PlaygroundViewer)
 // and its own component tree — none of which the main `/` viewer route needs.
@@ -99,7 +98,7 @@ export function App({ sourceProviders }: AppProps = {}) {
         </ChunkErrorBoundary>
         <Toaster />
         <StaleDeploymentNotice />
-        <Analytics />
+
       </>
     );
   }
@@ -113,7 +112,7 @@ export function App({ sourceProviders }: AppProps = {}) {
         </ChunkErrorBoundary>
         <Toaster />
         <StaleDeploymentNotice />
-        <Analytics />
+
       </>
     );
   }
@@ -128,7 +127,7 @@ export function App({ sourceProviders }: AppProps = {}) {
               the status bar, rather than the whole window's here. */}
           <ViewerLayout />
           <StaleDeploymentNotice />
-          <Analytics />
+
         </SourceHostProvider>
       </ExtensionHostProvider>
     </BimProvider>
